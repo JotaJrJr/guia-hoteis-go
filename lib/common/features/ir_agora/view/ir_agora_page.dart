@@ -8,12 +8,13 @@ import 'package:guia_hoteis_processo/common/domain/repositories/motel_repository
 import 'package:guia_hoteis_processo/common/features/ir_agora/viewmodel/ir_agora_view_model.dart';
 import 'package:guia_hoteis_processo/common/features/ir_agora/widgets/motel_desconto_widget.dart';
 
-import '../widgets/image_network_widget.dart';
+import '../widgets/ir_agora_app_bar.dart';
 import '../widgets/motel_widget.dart';
-import '../widgets/smooth_toggle_switch_widget.dart';
 
 class IrAgoraPage extends StatefulWidget {
-  const IrAgoraPage({super.key});
+  final IrAgoraViewModel? viewModel;
+
+  const IrAgoraPage({super.key, this.viewModel});
 
   @override
   State<IrAgoraPage> createState() => _IrAgoraPageState();
@@ -32,105 +33,96 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
 
     _hotelApiService = HotelApiService();
     _repository = MotelRepositoryImpl(_hotelApiService);
-    viewModel = IrAgoraViewModel(_repository);
+    viewModel = widget.viewModel ?? IrAgoraViewModel(_repository);
     viewModel.getMoteis();
 
     _pageController = PageController();
     _pageController.addListener(() {
       viewModel.updateCurrentPage(_pageController.page ?? 0.0);
-
-      debugPrint("index da lista : ${viewModel.currentPage}");
     });
   }
 
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.red,
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Column(
+            children: [
+              IrAgoraAppBar(
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+              const SizedBox(height: 12.0),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    topLeft: Radius.circular(12),
+                  ),
+                  color: Colors.grey[300],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                      child: SizedBox(
+                        height: 150,
+                        child: AnimatedBuilder(
+                          animation: viewModel,
+                          builder: (_, __) {
+                            if (viewModel.isLoading) {
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
 
-  final List<Widget> widgetList = [
-    /// PRIMEIRO WIDGET
-    Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Icon(
-          Icons.menu,
-          color: Colors.white,
-        ),
-        SmoothToggleSwitch(),
-        Icon(
-          Icons.search,
-          color: Colors.white,
-        ),
-      ],
-    ),
+                            final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
 
-    /// SEGUNDO WIDGET
-    Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(20),
-            topLeft: Radius.circular(20),
-          ),
-          color: Colors.grey[300],
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: SizedBox(
-                height: 190,
-                child: AnimatedBuilder(
-                  animation: viewModel,
-                  builder: (_, __) {
-                    if (viewModel.isLoading) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
+                            if (discountedSuites.isEmpty) {
+                              return Center(
+                                child: Text("Sem suíte com desconto"),
+                              );
+                            }
 
-                    final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
+                            return PageView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: discountedSuites.length,
+                              itemBuilder: (context, index) {
+                                final DiscountedSuiteItem item = discountedSuites[index];
 
-                    if (discountedSuites.isEmpty) {
-                      return Center(
-                        child: Text("Sem suíte com desconto"),
-                      );
-                    }
+                                final double originalPrice = item.suite.periodos.first.valor;
+                                final double discountValue = item.suite.periodos.first.desconto?.desconto ?? 0.0;
 
-                    return PageView.builder(
-                      controller: _pageController,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: discountedSuites.length,
-                      itemBuilder: (context, index) {
-                        final DiscountedSuiteItem item = discountedSuites[index];
+                                final double discountPercentage = originalPrice > 0 ? (discountValue / originalPrice) * 100 : 0.0;
+                                final double discountedPrice = originalPrice - discountValue;
 
-                        final double originalPrice = item.suite.periodos.first.valor;
-                        final double discountValue = item.suite.periodos.first.desconto?.desconto ?? 0.0;
-
-                        final double discountPercentage = originalPrice > 0 ? (discountValue / originalPrice) * 100 : 0.0;
-                        final double discountedPrice = originalPrice - discountValue;
-
-                        return MotelDescontoWidget(item: item, discountPercentage: discountPercentage, discountedPrice: discountedPrice);
-                      },
-                    );
-                  },
+                                return MotelDescontoWidget(item: item, discountPercentage: discountPercentage, discountedPrice: discountedPrice);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 50,
+                      child: AnimatedBuilder(
+                        animation: viewModel,
+                        builder: (_, __) {
+                          final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
+                          if (discountedSuites.isEmpty) return const SizedBox();
+                          return buildDots(discountedSuites.length);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            AnimatedBuilder(
-              animation: viewModel,
-              builder: (_, __) {
-                final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
-                if (discountedSuites.isEmpty) return const SizedBox();
-                return buildDots(discountedSuites.length);
-              },
-            ),
-            Expanded(
-              child: AnimatedBuilder(
+              Container(),
+              AnimatedBuilder(
                 animation: viewModel,
-                builder: (_, __) {
+                builder: (context, child) {
                   if (viewModel.moteis.isEmpty) {
                     return Center(
                       child: CircularProgressIndicator(),
@@ -139,34 +131,38 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
 
                   if (viewModel.moteis.isEmpty) {
                     return Center(
-                      child: Text("0 hotéis"),
+                      child: Column(
+                        children: [
+                          Icon(Icons.info, size: 120),
+                          Text("Houve algume erro na busca..."),
+                        ],
+                      ),
                     );
                   }
 
-                  return Expanded(
+                  return Container(
+                    color: Colors.grey[200],
+                    height: 1200,
                     child: ListView.separated(
                       itemCount: viewModel.moteis.length,
-                      separatorBuilder: (context, index) => Divider(),
+                      separatorBuilder: (context, index) => SizedBox(height: 12.0),
                       itemBuilder: (context, index) {
                         final Motel motel = viewModel.moteis[index];
 
-                        return SizedBox(
-                          height: 200,
-                          child: MotelWidget(
-                            model: motel,
-                          ),
+                        return MotelWidget(
+                          model: motel,
                         );
                       },
                     ),
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  ];
+    );
+  }
 
   Widget buildDots(int count) {
     final double currentPage = viewModel.currentPage;
@@ -190,135 +186,6 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
           ),
         );
       }),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.red,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Icon(
-                  Icons.menu,
-                  color: Colors.white,
-                ),
-                SmoothToggleSwitch(),
-                Icon(
-                  Icons.search,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-            SizedBox(
-              height: 12.0,
-            ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    topLeft: Radius.circular(20),
-                  ),
-                  color: Colors.grey[300],
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: SizedBox(
-                        height: 190,
-                        child: AnimatedBuilder(
-                          animation: viewModel,
-                          builder: (_, __) {
-                            if (viewModel.isLoading) {
-                              return Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-
-                            final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
-
-                            if (discountedSuites.isEmpty) {
-                              return Center(
-                                child: Text("Sem suíte com desconto"),
-                              );
-                            }
-
-                            return PageView.builder(
-                              controller: _pageController,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: discountedSuites.length,
-                              itemBuilder: (context, index) {
-                                final DiscountedSuiteItem item = discountedSuites[index];
-
-                                final double originalPrice = item.suite.periodos.first.valor;
-                                final double discountValue = item.suite.periodos.first.desconto?.desconto ?? 0.0;
-
-                                final double discountPercentage = originalPrice > 0 ? (discountValue / originalPrice) * 100 : 0.0;
-                                final double discountedPrice = originalPrice - discountValue;
-
-                                return MotelDescontoWidget(item: item, discountPercentage: discountPercentage, discountedPrice: discountedPrice);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    AnimatedBuilder(
-                      animation: viewModel,
-                      builder: (_, __) {
-                        final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
-                        if (discountedSuites.isEmpty) return const SizedBox();
-                        return buildDots(discountedSuites.length);
-                      },
-                    ),
-                    Expanded(
-                      child: AnimatedBuilder(
-                        animation: viewModel,
-                        builder: (_, __) {
-                          if (viewModel.moteis.isEmpty) {
-                            return Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-
-                          if (viewModel.moteis.isEmpty) {
-                            return Center(
-                              child: Text("0 hotéis"),
-                            );
-                          }
-
-                          return Expanded(
-                            child: ListView.separated(
-                              itemCount: viewModel.moteis.length,
-                              separatorBuilder: (context, index) => Divider(),
-                              itemBuilder: (context, index) {
-                                final Motel motel = viewModel.moteis[index];
-
-                                return SizedBox(
-                                  height: 200,
-                                  child: MotelWidget(
-                                    model: motel,
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

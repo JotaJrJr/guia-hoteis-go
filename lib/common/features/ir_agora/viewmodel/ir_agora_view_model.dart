@@ -53,11 +53,9 @@ class IrAgoraViewModel extends ChangeNotifier {
               suite: suite,
             ),
           );
-          debugPrint(_discountedSuites.length.toString());
         }
       }
     }
-    debugPrint(_discountedSuites.length.toString());
 
     notifyListeners();
   }

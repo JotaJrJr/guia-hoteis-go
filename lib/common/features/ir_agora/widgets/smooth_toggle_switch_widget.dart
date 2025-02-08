@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SmoothToggleSwitch extends StatefulWidget {
+  const SmoothToggleSwitch({super.key});
+
   @override
   _SmoothToggleSwitchState createState() => _SmoothToggleSwitchState();
 }

@@ -7,12 +7,17 @@ import 'suite_widget.dart';
 
 class MotelWidget extends StatelessWidget {
   final Motel model;
-  const MotelWidget({super.key, required this.model});
+  const MotelWidget({
+    super.key,
+    required this.model,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
+        SizedBox(height: 12.0),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -32,20 +37,21 @@ class MotelWidget extends StatelessWidget {
             FlutterLogo(),
           ],
         ),
-        SizedBox(
-          height: 500,
+        const SizedBox(height: 8.0),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0),
+          height: 900,
           child: PageView.builder(
             itemCount: model.suites.length,
             itemBuilder: (context, index) {
               final Suite suite = model.suites[index];
 
-              return Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SuiteWidget(model: suite),
+              return SuiteWidget(
+                model: suite,
               );
             },
           ),
-        ),
+        )
       ],
     );
   }
