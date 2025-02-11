@@ -23,13 +23,12 @@ class IrAgoraPage extends StatefulWidget {
 class _IrAgoraPageState extends State<IrAgoraPage> {
   late IrAgoraViewModel viewModel;
   late MotelRepository _repository;
-  late HotelApiService _hotelApiService;
+  final HotelApiService _hotelApiService = HotelApiService();
 
   @override
   void initState() {
     super.initState();
 
-    _hotelApiService = HotelApiService();
     _repository = MotelRepositoryImpl(_hotelApiService);
     viewModel = widget.viewModel ?? IrAgoraViewModel(_repository);
     viewModel.getMoteis();
