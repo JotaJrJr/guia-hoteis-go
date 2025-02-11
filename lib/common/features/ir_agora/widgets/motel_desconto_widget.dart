@@ -4,10 +4,10 @@ import 'package:guia_hoteis_processo/common/features/ir_agora/viewmodel/ir_agora
 import 'image_network_widget.dart';
 
 class MotelDescontoWidget extends StatelessWidget {
-  final double discountPercentage;
-  final double discountedPrice;
+  // final double discountPercentage;
+  // final double discountedPrice;
   final DiscountedSuiteItem item;
-  const MotelDescontoWidget({super.key, required this.item, required this.discountPercentage, required this.discountedPrice});
+  const MotelDescontoWidget({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class MotelDescontoWidget extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "${discountPercentage.toStringAsFixed(1)}% de desconto",
+                            "${item.discountPercentage.toStringAsFixed(0)}% de desconto",
                             style: TextStyle(
                               decoration: TextDecoration.underline,
                             ),
@@ -93,7 +93,7 @@ class MotelDescontoWidget extends StatelessWidget {
                             color: Colors.white,
                           ),
                           Text(
-                            "a partir de R\$ ${discountedPrice.toStringAsFixed(2)}",
+                            "a partir de R\$ ${item.discountValue.toStringAsFixed(2)}",
                             style: TextStyle(
                               decoration: TextDecoration.underline,
                             ),

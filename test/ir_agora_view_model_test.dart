@@ -16,16 +16,10 @@ void main() {
   });
 
   group('IrAgoraViewModel Tests', () {
-    test('init stat e', () {
+    test('init state', () {
       expect(viewModel.moteis, isEmpty);
       expect(viewModel.discountedSuites, isEmpty);
       expect(viewModel.isLoading, isFalse);
-      expect(viewModel.currentPage, equals(0.0));
-    });
-
-    test('updateCurrentPage atualiza a página', () {
-      viewModel.updateCurrentPage(2.0);
-      expect(viewModel.currentPage, equals(2.0));
     });
 
     test('getMoteis pega os moteis e filtra pelo filtro lá', () async {
@@ -62,7 +56,8 @@ void main() {
         ),
       ];
 
-      when(repository.getMoteis()).thenAnswer((_) async => motels);
+      // when(repository.getMoteis()).thenAnswer((_) async => motels);
+      when(repository.getMoteis).thenAnswer((_) async => motels);
 
       await viewModel.getMoteis();
 
@@ -72,7 +67,7 @@ void main() {
     });
 
     test('getMoteis dá erro', () async {
-      when(repository.getMoteis()).thenThrow(Exception('Deu ruim ein galera'));
+      when(repository.getMoteis).thenThrow(Exception('Deu ruim ein galera'));
 
       await viewModel.getMoteis();
 

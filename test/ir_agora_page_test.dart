@@ -97,6 +97,13 @@ void main() {
               ),
             ],
           ),
+          periodo: Periodo(
+            tempo: "",
+            tempoFormatado: "",
+            valor: 0.0,
+            valorTotal: 0.0,
+            temCortesia: true,
+          ),
         ),
       ];
 

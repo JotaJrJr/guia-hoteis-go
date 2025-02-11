@@ -25,8 +25,6 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
   late MotelRepository _repository;
   late HotelApiService _hotelApiService;
 
-  late PageController _pageController;
-
   @override
   void initState() {
     super.initState();
@@ -35,11 +33,6 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
     _repository = MotelRepositoryImpl(_hotelApiService);
     viewModel = widget.viewModel ?? IrAgoraViewModel(_repository);
     viewModel.getMoteis();
-
-    _pageController = PageController();
-    _pageController.addListener(() {
-      viewModel.updateCurrentPage(_pageController.page ?? 0.0);
-    });
   }
 
   @override
@@ -50,9 +43,7 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
         child: SafeArea(
           child: Column(
             children: [
-              IrAgoraAppBar(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
+              IrAgoraAppBar(),
               const SizedBox(height: 12.0),
               Container(
                 decoration: BoxDecoration(
@@ -87,18 +78,15 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
                             }
 
                             return PageView.builder(
+                              controller: viewModel.pageController,
                               scrollDirection: Axis.horizontal,
                               itemCount: discountedSuites.length,
                               itemBuilder: (context, index) {
                                 final DiscountedSuiteItem item = discountedSuites[index];
 
-                                final double originalPrice = item.suite.periodos.first.valor;
-                                final double discountValue = item.suite.periodos.first.desconto?.desconto ?? 0.0;
-
-                                final double discountPercentage = originalPrice > 0 ? (discountValue / originalPrice) * 100 : 0.0;
-                                final double discountedPrice = originalPrice - discountValue;
-
-                                return MotelDescontoWidget(item: item, discountPercentage: discountPercentage, discountedPrice: discountedPrice);
+                                return MotelDescontoWidget(
+                                  item: item,
+                                );
                               },
                             );
                           },
@@ -106,9 +94,9 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
                       ),
                     ),
                     SizedBox(
-                      height: 50,
-                      child: AnimatedBuilder(
-                        animation: viewModel,
+                      height: 15,
+                      child: ListenableBuilder(
+                        listenable: Listenable.merge([viewModel, viewModel.pageController]),
                         builder: (_, __) {
                           final List<DiscountedSuiteItem> discountedSuites = viewModel.discountedSuites;
                           if (discountedSuites.isEmpty) return const SizedBox();
@@ -116,6 +104,7 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
                         },
                       ),
                     ),
+                    SizedBox(height: 15),
                   ],
                 ),
               ),
@@ -165,7 +154,12 @@ class _IrAgoraPageState extends State<IrAgoraPage> {
   }
 
   Widget buildDots(int count) {
-    final double currentPage = viewModel.currentPage;
+    final double currentPage;
+    if (viewModel.pageController.positions.isEmpty) {
+      currentPage = 0;
+    } else {
+      currentPage = viewModel.pageController.page ?? 0;
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(count, (index) {

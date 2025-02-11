@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:guia_hoteis_processo/common/domain/models/motel_model.dart';
+import 'package:guia_hoteis_processo/common/domain/models/periodo_model.dart';
 import 'package:guia_hoteis_processo/common/domain/models/suite_model.dart';
 import 'package:guia_hoteis_processo/common/domain/repositories/motel_repository.dart';
 
 class IrAgoraViewModel extends ChangeNotifier {
   final MotelRepository _repository;
+
+  final PageController pageController = PageController(initialPage: 0);
 
   IrAgoraViewModel(this._repository);
 
@@ -16,16 +19,6 @@ class IrAgoraViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
-
-  double _currentPage = 0.0;
-  double get currentPage => _currentPage;
-
-  void updateCurrentPage(double page) {
-    if (_currentPage != page) {
-      _currentPage = page;
-      notifyListeners();
-    }
-  }
 
   Future<void> getMoteis() async {
     _isLoading = true;
@@ -42,20 +35,16 @@ class IrAgoraViewModel extends ChangeNotifier {
     }
   }
 
+  Iterable<DiscountedSuiteItem> getSuitesWithDiscount(Motel motel) {
+    return motel.suites.expand((suite) {
+      return suite.periodos.where((element) => element.desconto != null).map((periodo) {
+        return DiscountedSuiteItem(motel: motel, suite: suite, periodo: periodo);
+      });
+    });
+  }
+
   void _filterSuitesComDesconto() {
-    _discountedSuites = [];
-    for (var motel in _moteis) {
-      for (var suite in motel.suites) {
-        if (suite.periodos.any((periodo) => periodo.desconto != null && periodo.desconto!.desconto > 0)) {
-          _discountedSuites.add(
-            DiscountedSuiteItem(
-              motel: motel,
-              suite: suite,
-            ),
-          );
-        }
-      }
-    }
+    _discountedSuites = _moteis.expand((motel) => getSuitesWithDiscount(motel)).toList();
 
     notifyListeners();
   }
@@ -64,9 +53,16 @@ class IrAgoraViewModel extends ChangeNotifier {
 class DiscountedSuiteItem {
   final Motel motel;
   final Suite suite;
+  final Periodo periodo;
+
+  double get discountValue => periodo.desconto!.desconto;
+  double get originalPrice => periodo.valor;
+
+  double get discountPercentage => (discountValue / originalPrice) * 100;
 
   DiscountedSuiteItem({
     required this.motel,
     required this.suite,
+    required this.periodo,
   });
 }
