@@ -19,3 +19,9 @@ Infelizmente não tive tanto tempo assim para adicionar mais ferramentas semelha
 
 Para rodar não tem muito mistério, estou usando a versão 3.27.0 do Flutter, creio que a mais atual
 Só instalar, talvez um flutter pub get e rodar flutter run ou em modo debug, que é a melhor opção
+
+Lembrando que rodar os testes pelo arquivo é capaz de dar um "falso positivo", rodem pelo terminal "flutter test" que é mais preciso
+
+https://streamable.com/vyd91g
+
+Link do vídeo
